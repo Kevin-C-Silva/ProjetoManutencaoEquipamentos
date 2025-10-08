@@ -9,16 +9,18 @@ nome varchar(100) not null,
 email varchar(100) not null,
 senha varchar(100) not null,
 cep varchar(9),
-role enum('Comum', 'Técnico', 'Gerente', 'Admin') not null default 'Comum'
+role enum('Comum', 'Técnico', 'Gerente', 'Admin') not null default 'Comum',
+criado_em datetime default now()
 );
 
 create table Equipamentos(
 id_equipamento int primary key auto_increment,
 id_usuario int,
 nome varchar(100) not null,
-modelo varchar(100) not null,
+modelo varchar(100) not null default 'Não identificado',
 foto varchar(255),
-situacao enum('Sem ordem', 'Em análise', 'Em manutenção', 'Em reparo', 'Em revisão', 'Comprometido', 'Em boas condições') not null default 'Sem ordem'
+situacao enum('Sem ordem', 'Em análise', 'Em manutenção', 'Em reparo', 'Em revisão', 'Comprometido', 'Em boas condições') not null default 'Sem ordem',
+criado_em datetime default now()
 );
 
 create table Tecnicos(
@@ -31,16 +33,19 @@ situacao enum('Disponível', 'Ocupado', 'Indisponível') not null default 'Dispo
 create table OrdensServico(
 id_ordem int primary key auto_increment,
 id_equipamento int not null,
-id_tecnico int not null,
+id_tecnico int,
+titulo varchar(50) not null,
 mensagem varchar(255),
-situacao enum('Em espera', 'Em andamento', 'Concluído') not null default 'Em espera'
+situacao enum('Em espera', 'Em andamento', 'Concluído') not null default 'Em espera',
+criado_em datetime default now()
 );
 
 create table Relatorios(
 id_relatorio int primary key auto_increment,
 id_ordem int,
 id_tecnico int,
-assunto enum('Disponibilidade', 'Equipamento', 'Outro') not null
+assunto enum('Disponibilidade', 'Equipamento', 'Outro') not null,
+criado_em datetime default now()
 );
 
 alter table OrdensServico add constraint fk_ordens_id_equip foreign key (id_equipamento) references Equipamentos(id_equipamento),
@@ -57,22 +62,26 @@ delimiter $$
 drop procedure if exists cadUsuario; $$
 create procedure cadUsuario (in c_nome varchar(100), in c_email varchar(100), in c_senha varchar(100), in c_cep_inicio varchar(5), in c_cep_fim varchar(3))
 begin
-	insert into Usuarios(nome, email, senha, cep)
-				values(c_nome, c_email, c_senha, concat(c_cep_inicio, '-', c_cep_fim));
+
 end; $$
 
 delimiter $$
-drop procedure if exists cadTecnico; $$
-create procedure cadTecnico (in c_nome varchar(100), in c_espec varchar(100), in c_email varchar(100), in c_senha varchar(100), in c_cep_inicio varchar(5), in c_cep_fim varchar(3))
+drop procedure if exists cadUsuario; $$
+create procedure cadUsuario (in c_nome varchar(100), in c_espec varchar(100), in c_email varchar(100), in c_senha varchar(100), in c_cep_inicio varchar(5), in c_cep_fim varchar(3), c_role varchar(7))
 begin
-	insert into Tecnicos(nome, especialidade, situacao)
-				values(c_nome, c_espec, 'Disponivel');
-	insert into Usuarios(id_tecnico, nome, email, senha, cep, role)
-				values(last_insert_id(), c_nome, c_email, c_senha, concat(c_cep_inicio, '-', c_cep_fim), 'Técnico');
+	if c_role != 'Técnico' then
+		insert into Usuarios(nome, email, senha, cep, role)
+					values(c_nome, c_email, c_senha, concat(c_cep_inicio, '-', c_cep_fim), c_role);
+	else
+		insert into Tecnicos(nome, especialidade, situacao)
+					values(c_nome, c_espec, 'Disponivel');
+		insert into Usuarios(id_tecnico, nome, email, senha, cep, role)
+					values(last_insert_id(), c_nome, c_email, c_senha, concat(c_cep_inicio, '-', c_cep_fim), c_role);
+	end if;
 end; $$
 
-call cadUsuario('Miguel', 'Miguel@gmail.com', '12234', '21212', '321');
-call cadTecnico('Alexandre', 'Patinetes', 'Alexandre@gmail.com', '12343', '01234', '123');
+call cadUsuario('Miguel', null, 'Miguel@gmail.com', '12234', '21212', '321', 'Comum');
+call cadUsuario('Alexandre', 'Patinetes', 'Alexandre@gmail.com', '12343', '01234', '123', 'Técnico');
 
 select * from Tecnicos;
 select * from Usuarios;
@@ -89,8 +98,8 @@ delimiter $$
 drop procedure if exists cadOrdem; $$
 create procedure cadOrdem(c_equip int, c_tec int, c_msg varchar(255))
 begin
-	insert into OrdensServico(id_equipamento, id_tecnico, mensagem)
-				values (c_equip, c_tec, c_msg);
+	insert into OrdensServico(id_equipamento, mensagem)
+				values (c_equip, c_msg);
 end; $$
 
 call cadEquip(1, 'Ventilador', 'Mundial');
@@ -100,11 +109,23 @@ select * from Equipamentos;
 select * from OrdensServico;
 
 delimiter $$
-drop procedure if exists listarUsuario $$
-create procedure listarUsuario()
+drop procedure if exists listarUsuarios; $$
+create procedure listarUsuarios(in c_role varchar(7))
 begin
-	select nome, email, cep from Usuarios order by nome;
-end;
+    if c_role is null then
+        select nome, email, criado_em from Usuarios order by nome;
+    elseif c_role != 'Técnico' then
+        select nome, email from Usuarios 
+        where role = c_role 
+        order by nome;
+    else
+        select u.nome, u.email, u.role, u.criado_em, t.especialidade, t.situacao
+        from Usuarios u
+        left join Tecnicos t on t.id_tecnico = u.id_tecnico 
+        where u.role = 'Técnico' 
+        order by u.nome;
+    end if;
+end $$
 
 delimiter $$
 drop procedure if exists listarEquipamento $$
@@ -117,7 +138,16 @@ delimiter $$
 drop procedure if exists listarOrdens $$
 create procedure listarOrdens()
 begin
-	select id_tecnico, id_equipamento from OrdensServicos 
-    on id_tecnico = 
-end;
+	select o.titulo, t.nome, t.especialidade, o.situacao, o.criado_em from OrdensServico o
+    left join Tecnicos t on t.id_tecnico = o.id_tecnico order by o.titulo;
+end; $$
 
+delimiter $$
+drop procedure if exists listarRelatorios $$
+create procedure listarRelatorios()
+begin
+	select o.titulo, t.nome, r.assunto, r.criado_em
+	from Relatorios r
+	left join OrdensServico o on o.id_ordem = r.id_ordem
+	left join Tecnicos t on t.id_tecnico = r.id_tecnico;
+end; $$
