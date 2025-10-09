@@ -113,13 +113,13 @@ drop procedure if exists listarUsuarios; $$
 create procedure listarUsuarios(in c_role varchar(7))
 begin
     if c_role is null then
-        select nome, email, criado_em from Usuarios order by nome;
+        select distinct nome, email, criado_em from Usuarios order by nome;
     elseif c_role != 'Técnico' then
-        select nome, email from Usuarios 
+        select distinct nome, email from Usuarios 
         where role = c_role 
         order by nome;
     else
-        select u.nome, u.email, u.role, u.criado_em, t.especialidade, t.situacao
+        select distinct u.nome, u.email, u.role, u.criado_em, t.especialidade, t.situacao
         from Usuarios u
         left join Tecnicos t on t.id_tecnico = u.id_tecnico 
         where u.role = 'Técnico' 
@@ -131,14 +131,14 @@ delimiter $$
 drop procedure if exists listarEquipamento $$
 create procedure listarEquipamento()
 begin
-	select nome, modelo, foto from Equipamentos order by nome;
+	select distinct nome, modelo, foto from Equipamentos order by nome;
 end;
 
 delimiter $$
 drop procedure if exists listarOrdens $$
 create procedure listarOrdens()
 begin
-	select o.titulo, t.nome, t.especialidade, o.situacao, o.criado_em from OrdensServico o
+	select distinct o.titulo, t.nome, t.especialidade, o.situacao, o.criado_em from OrdensServico o
     left join Tecnicos t on t.id_tecnico = o.id_tecnico order by o.titulo;
 end; $$
 
@@ -146,7 +146,7 @@ delimiter $$
 drop procedure if exists listarRelatorios $$
 create procedure listarRelatorios()
 begin
-	select o.titulo, t.nome, r.assunto, r.criado_em
+	select distinct o.titulo, t.nome, r.assunto, r.criado_em
 	from Relatorios r
 	left join OrdensServico o on o.id_ordem = r.id_ordem
 	left join Tecnicos t on t.id_tecnico = r.id_tecnico;
