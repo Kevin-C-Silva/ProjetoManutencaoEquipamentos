@@ -1,6 +1,6 @@
-drop database if exists SisManuEquip;
-create database SisManuEquip;
-use SisManuEquip;
+drop database if exists bdManuEquip;
+create database bdManuEquip;
+use bdManuEquip;
 
 create table Usuarios(
 id_usuario int primary key auto_increment,
@@ -58,16 +58,16 @@ alter table Usuarios add constraint fk_usuarios_id_tecnico foreign key (id_tecni
 
 alter table Equipamentos add constraint fk_equipamentos_id_usuario foreign key (id_usuario) references Usuarios(id_usuario);
 
-delimiter $$
-drop procedure if exists cadUsuario; $$
-create procedure cadUsuario (in c_nome varchar(100), in c_email varchar(100), in c_senha varchar(100), in c_cep_inicio varchar(5), in c_cep_fim varchar(3))
+/*delimiter $$
+drop procedure if exists cadastrarUsuario; $$
+create procedure cadastrarUsuario (in c_nome varchar(100), in c_email varchar(100), in c_senha varchar(100), in c_cep_inicio varchar(5), in c_cep_fim varchar(3))
 begin
 
-end; $$
+end; $$*/
 
 delimiter $$
-drop procedure if exists cadUsuario; $$
-create procedure cadUsuario (in c_nome varchar(100), in c_espec varchar(100), in c_email varchar(100), in c_senha varchar(100), in c_cep_inicio varchar(5), in c_cep_fim varchar(3), c_role varchar(7))
+drop procedure if exists cadastrarUsuario; $$
+create procedure cadastrarUsuario (in c_nome varchar(100), in c_espec varchar(100), in c_email varchar(100), in c_senha varchar(100), in c_cep_inicio varchar(5), in c_cep_fim varchar(3), c_role varchar(7))
 begin
 	if c_role != 'Técnico' then
 		insert into Usuarios(nome, email, senha, cep, role)
@@ -87,39 +87,47 @@ select * from Tecnicos;
 select * from Usuarios;
 
 delimiter $$
-drop procedure if exists cadEquip; $$
-create procedure cadEquip (in c_usuario int, in c_nome varchar(100), in c_modelo varchar(100))
+drop procedure if exists cadastrarEquipamento; $$
+create procedure cadastrarEquip (in c_usuario int, in c_nome varchar(100), in c_modelo varchar(100))
 begin
 	insert into Equipamentos(id_usuario, nome, modelo)
 				values(c_usuario, c_nome, c_modelo);
 end; $$
 
 delimiter $$
-drop procedure if exists cadOrdem; $$
-create procedure cadOrdem(c_equip int, c_tec int, c_msg varchar(255))
+drop procedure if exists cadastrarOrdem; $$
+create procedure cadastrarOrdem(in p_equip int, in p_tec int, in p_msg varchar(255))
 begin
 	insert into OrdensServico(id_equipamento, mensagem)
-				values (c_equip, c_msg);
+				values (p_equip, p_msg);
 end; $$
+
+delimiter $$
+drop procedure if exists cadastrarRelatorio; $$
+create procedure cadastrarRelatorio(in p_ordem int, in p_tecnico int, in p_assunto varchar(15))
+begin
+	insert into Relatorios(id_ordem, id_tecnico, assunto)
+				values (p_ordem, p_tecnico, p_assunto);
+end; $$
+
 
 call cadEquip(1, 'Ventilador', 'Mundial');
 call cadOrdem(1, 1, 'Ventilador ficando quente rápido não sei por que');
 
 select * from Equipamentos;
 select * from OrdensServico;
-
-delimiter $$
+/*delimiter $$
 drop procedure if exists listarUsuarios; $$
-create procedure listarUsuarios(in c_role varchar(7))
+create procedure listarUsuarios()
 begin
     if c_role is null then
         select distinct nome, email, criado_em from Usuarios order by nome;
-    elseif c_role != 'Técnico' then
+    elseif p_role != 'Técnico' then
         select distinct nome, email from Usuarios 
-        where role = c_role 
+        where role = p_role 
         order by nome;
     else
-        select distinct u.nome, u.email, u.role, u.criado_em, t.especialidade, t.situacao
+        select distinct u.nome, u.email, u.role, u.criado_em, t.especialidade as tecnico_especialidade, t.situacao as tecnico_situacao
         from Usuarios u
         left join Tecnicos t on t.id_tecnico = u.id_tecnico 
         where u.role = 'Técnico' 
@@ -128,25 +136,56 @@ begin
 end $$
 
 delimiter $$
-drop procedure if exists listarEquipamento $$
+drop procedure if exists listarTecnicos; $$
+create procedure listarTecnicos(in p_role varchar(7))
+begin
+	select distinct u.nome, u.email, u.role, u.criado_em, t.especialidade as tecnico_especialidade, t.situacao as tecnico_situacao
+    from Usuarios u
+    left join Tecnicos t on t.id_tecnico = u.id_tecnico 
+    where u.role = 'Técnico' 
+    order by u.nome;
+end $$
+*/
+
+delimiter $$
+drop procedure if exists listarUsuarios; $$
+create procedure listarUsuarios(in p_role varchar(7))
+begin
+    if p_role is null then
+        select distinct nome, email, criado_em from Usuarios order by nome;
+    elseif p_role != 'Técnico' then
+        select distinct nome, email from Usuarios 
+        where role = p_role 
+        order by nome;
+    else
+        select distinct u.nome, u.email, u.role, u.criado_em, t.especialidade as tecnico_especialidade, t.situacao as tecnico_situacao
+        from Usuarios u
+        left join Tecnicos t on t.id_tecnico = u.id_tecnico 
+        where u.role = 'Técnico' 
+        order by u.nome;
+    end if;
+end $$
+
+delimiter $$
+drop procedure if exists listarEquipamentos; $$
 create procedure listarEquipamento()
 begin
 	select distinct nome, modelo, foto from Equipamentos order by nome;
 end;
 
 delimiter $$
-drop procedure if exists listarOrdens $$
+drop procedure if exists listarOrdens; $$
 create procedure listarOrdens()
 begin
-	select distinct o.titulo, t.nome, t.especialidade, o.situacao, o.criado_em from OrdensServico o
+	select distinct o.titulo, t.nome as tecnico_nome, t.especialidade as tecnico_especialidade, o.situacao, o.criado_em from OrdensServico o
     left join Tecnicos t on t.id_tecnico = o.id_tecnico order by o.titulo;
 end; $$
 
 delimiter $$
-drop procedure if exists listarRelatorios $$
+drop procedure if exists listarRelatorios; $$
 create procedure listarRelatorios()
 begin
-	select distinct o.titulo, t.nome, r.assunto, r.criado_em
+	select distinct o.titulo as ordem_titulo, t.nome, r.assunto as tecnico_nome, r.criado_em
 	from Relatorios r
 	left join OrdensServico o on o.id_ordem = r.id_ordem
 	left join Tecnicos t on t.id_tecnico = r.id_tecnico;

@@ -1,0 +1,68 @@
+﻿@model IEnumerable<ProjetoManutencaoEquipamentos.Models.Usuarios>
+
+<link href="~/css/listas.css" rel="stylesheet" />
+
+<h2>Usuários</h2>
+
+<table class="tbl">
+    <thead>
+        <tr>
+            <th>Nome</th>
+            <th>Email</th>
+            <th>Função</th>            
+            <th>Criado em</th>
+            <th class="thTec" style="display:none">Especialidade</th>
+            <th class="thTec" style="display:none">Situação</th>
+            <th>Ações</th>           
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var usuario in Model)
+        {
+            <tr onload="if(@usuario.id_tecnico != null{ativarTabsTec()}">
+                <td id="thTec" style="display: none"><input type="hidden" value="@usuario.id_usuario" /></td>
+                <td id="thTec" style="display: none"><input type="hidden" value="@usuario.id_tecnico" /></td>
+                @*
+                @if (!(usuario. == null))
+                {
+                    <td><img style="min-width: 50px; min-height: 50px; background-color: lightgray; opacity: 0.75; border: 1px solid black; border-radius: 10px;" src="@usuario.Imagem" alt="Nada" /></td>
+                }
+                else
+                {
+                    <td><p style="margin: 0 auto; text-align: center;">Nada</p></td>
+                } *@
+                <td>@usuario.nome</td>
+                <td>@usuario.email</td>
+                <td>@usuario.role</td>
+                <td>@usuario.criado_em</td>
+                @if (usuario.id_tecnico != null)
+                {
+                    <td>@usuario.especialidade</td>
+                    <td>@usuario.situacao</td>
+                }
+                <td>
+                    <div class="acoes">
+                        <form asp-action="Editar" method="get">
+                            <input type="hidden" name="id" value="@usuario.id_usuario" />
+                            <button type="submit" class="btn btn-editar">Editar</button>
+                        </form>
+                        <form asp-action="Excluir" method="post" onsubmit="return confirm('Excluir este livro?');">
+                            @Html.AntiForgeryToken()
+
+                            <input type="hidden" name="id" value="@usuario.id_usuario" />
+                            <button type="submit" class="btn btn-excluir">Excluir</button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+<script>
+    function ativarTabsTec(){
+        document.getElementsByClassName("thTec").style.display = "block";
+    }
+</script>
+<br />
+<br />
+<a asp-action="CriarUsuario" class="btnLink">Cadastrar Usuário</a>

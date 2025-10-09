@@ -10,5 +10,8 @@
         public string? cep { get; set; }
         public string? role { get; set; }
         public DateTime criado_em { get; set; }
+
+        public string especialidade { get; set; }
+        public string situacao { get; set; }
     }
 }
