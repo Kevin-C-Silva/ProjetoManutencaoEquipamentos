@@ -1,25 +1,28 @@
-﻿@model IEnumerable<ProjetoManutencaoEquipamentos.Models.Usuarios>
+﻿@model IEnumerable<ProjetoManutencaoEquipamentos.Models.OrdensServico>
 
 <link href="~/css/listas.css" rel="stylesheet" />
 
-<h2>Usuários</h2>
+<h2>Ordens</h2>
 
 <table class="tbl">
     <thead>
         <tr>
-            <th>Nome</th>
-            <th>Email</th>
-            <th>Função</th>            
+            <th>Título</th>
+            <th>Mensagem</th>
+            <th>Modelo</th>
+            <th>Situação</th>
+            <th>Técnico</th>
             <th>Criado em</th>
-            <th>Ações</th>           
+            <th>Ações</th>
         </tr>
     </thead>
     <tbody>
-        @foreach (var usuario in Model)
+        @foreach (var ordem in Model)
         {
             <tr>
-                <td id="thTec" style="display: none"><input type="hidden" value="@usuario.id_usuario" /></td>
-                <td id="thTec" style="display: none"><input type="hidden" value="@usuario.id_tecnico" /></td>
+                <td style="display: none"><input type="hidden" value="@ordem.id_ordem" /></td>
+                <td style="display: none"><input type="hidden" value="@ordem.id_equipamento" /></td>
+                <td style="display: none"><input type="hidden" value="@ordem.id_tecnico" /></td>
                 @*
                 @if (!(usuario. == null))
                 {
@@ -29,20 +32,26 @@
                 {
                     <td><p style="margin: 0 auto; text-align: center;">Nada</p></td>
                 } *@
-                <td>@usuario.nome</td>
-                <td>@usuario.email</td>
-                <td>@usuario.role</td>
-                <td>@usuario.criado_em</td>
+                <td>@ordem.titulo</td>
+                <td>@ordem.descricao</td>
+                <td>@ordem.modelo_equipamento</td>
+                <td>@ordem.situacao</td>
+                @if(ordem.nome_tecnico != null)
+                {
+                    <td>@ordem.nome_tecnico</td>
+                }
+                <td>Nenhum</td>
+                <td>@ordem.criado_em</td>
                 <td>
                     <div class="acoes">
                         <form asp-action="Editar" method="get">
-                            <input type="hidden" name="id" value="@usuario.id_usuario" />
+                            <input type="hidden" name="id" value="@ordem.id_ordem" />
                             <button type="submit" class="btn btn-editar">Editar</button>
                         </form>
                         <form asp-action="Excluir" method="post" onsubmit="return confirm('Excluir este livro?');">
                             @Html.AntiForgeryToken()
 
-                            <input type="hidden" name="id" value="@usuario.id_usuario" />
+                            <input type="hidden" name="id" value="@ordem.id_ordem" />
                             <button type="submit" class="btn btn-excluir">Excluir</button>
                         </form>
                     </div>
@@ -53,4 +62,4 @@
 </table>
 <br />
 <br />
-<a asp-action="Cadastrar" class="btnLink">Cadastrar Usuário</a>
+<a asp-action="Cadastrar" class="btnLink">Cadastrar Ordem</a>

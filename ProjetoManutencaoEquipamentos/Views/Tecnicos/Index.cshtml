@@ -2,16 +2,18 @@
 
 <link href="~/css/listas.css" rel="stylesheet" />
 
-<h2>Usuários</h2>
+<h2>Técnicos</h2>
 
 <table class="tbl">
     <thead>
         <tr>
             <th>Nome</th>
             <th>Email</th>
-            <th>Função</th>            
+            <th>Função</th>
+            <th>Especialidade</th>
+            <th>Situação</th>
             <th>Criado em</th>
-            <th>Ações</th>           
+            <th>Ações</th>
         </tr>
     </thead>
     <tbody>
@@ -32,14 +34,16 @@
                 <td>@usuario.nome</td>
                 <td>@usuario.email</td>
                 <td>@usuario.role</td>
-                <td>@usuario.criado_em</td>
+                <td>@usuario.especialidade</td>
+                <td>@usuario.situacao</td>
+                <td>@usuario.criado_em</td>                
                 <td>
                     <div class="acoes">
                         <form asp-action="Editar" method="get">
                             <input type="hidden" name="id" value="@usuario.id_usuario" />
                             <button type="submit" class="btn btn-editar">Editar</button>
                         </form>
-                        <form asp-action="Excluir" method="post" onsubmit="return confirm('Excluir este livro?');">
+                        <form asp-action="Excluir" method="post" onsubmit="return confirm('Excluir este técnico?');">
                             @Html.AntiForgeryToken()
 
                             <input type="hidden" name="id" value="@usuario.id_usuario" />
@@ -53,4 +57,4 @@
 </table>
 <br />
 <br />
-<a asp-action="Cadastrar" class="btnLink">Cadastrar Usuário</a>
+<a asp-action="Cadastrar" class="btnLink">Cadastrar Técnico</a>

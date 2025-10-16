@@ -1,0 +1,37 @@
+﻿@model ProjetoManutencaoEquipamentos.Models.Usuarios
+
+<h2>Cadastrar Técnico</h2>
+<link href="~/css/cadastro.css" rel="stylesheet" />
+
+<form asp-action="Criar" method="post">
+    @Html.AntiForgeryToken()
+
+    <section>
+        <div>
+            <label>Nome</label>
+            <input asp-for="nome" required />
+        </div>
+
+        <div>
+            <label>Email</label>
+            <input asp-for="email" type="email" required />
+        </div>
+
+        <div>
+            <label>Senha (hash/temporária)</label>
+            <input asp-for="senha" type="text" required />
+        </div>
+
+        <div>
+            <label>CEP</label>
+            <input asp-for="cep" type="text" placeholder="XXXXX-XXX" required />
+        </div>
+
+        <div>
+            <label>Especialidade</label>
+            <input asp-for="especialidade" type="text" required />
+        </div>
+    </section>
+
+    <button class="btn btn-primary" type="submit">Salvar</button>
+</form>

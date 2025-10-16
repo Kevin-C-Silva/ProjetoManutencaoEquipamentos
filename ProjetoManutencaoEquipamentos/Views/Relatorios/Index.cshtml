@@ -1,0 +1,50 @@
+﻿@model IEnumerable<ProjetoManutencaoEquipamentos.Models.Relatorios>
+
+<link href="~/css/listas.css" rel="stylesheet" />
+
+<h2>Relatórios</h2>
+
+<table class="tbl">
+    <thead>
+        <tr>
+            <th>Ordem</th>
+            <th>Técnico</th>
+            <th style="max-width: 100px;">Assunto</th>
+            <th>Mensagem</th>
+            <th>Criado em</th>
+            <th>Ações</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var relatorio in Model)
+        {
+            <tr>
+                <td style="display: none"><input type="hidden" value="@relatorio.id_relatorio" /></td>
+                <td style="display: none"><input type="hidden" value="@relatorio.id_ordem" /></td>
+                <td style="display: none"><input type="hidden" value="@relatorio.id_tecnico" /></td>
+                <td>@relatorio.id_ordem</td>
+                <td>@relatorio.nome_tecnico</td>
+                <td>@relatorio.assunto</td>
+                <td style ="max-width: 500px; overflow-x:auto;">@relatorio.mensagem</td>
+                <td>@relatorio.criado_em</td>
+                <td>
+                    <div class="acoes">
+                        <form asp-action="Editar" method="get">
+                            <input type="hidden" name="id" value="@relatorio.id_relatorio" />
+                            <button type="submit" class="btn btn-editar">Editar</button>
+                        </form>
+                        <form asp-action="Excluir" method="post" onsubmit="return confirm('Excluir este relatório?');">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@relatorio.id_relatorio" />
+                            <button type="submit" class="btn btn-excluir">Excluir</button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<br />
+<br />
+<a asp-action="Cadastrar" class="btnLink">Cadastrar Relatório</a>

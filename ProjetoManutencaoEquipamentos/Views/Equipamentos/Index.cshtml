@@ -1,5 +1,56 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
-@{
-}
+﻿@model IEnumerable<ProjetoManutencaoEquipamentos.Models.Equipamentos>
+
+<link href="~/css/listas.css" rel="stylesheet" />
+
+<h2>Equipamentos</h2>
+
+<table class="tbl">
+    <thead>
+        <tr>
+            <th>Foto</th>
+            <th>Nome</th>
+            <th>Modelo</th>
+            <th>Situação</th>
+            <th>Criado em</th>
+            <th>Ações</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var equipamento in Model)
+        {
+            <tr>
+                <td style="display: none"><input type="hidden" value="@equipamento.id_equipamento" /></td>
+                <td style="display: none"><input type="hidden" value="@equipamento.id_usuario" /></td>
+
+                @if (!(equipamento.foto == null))
+                {
+                    <td><img style="min-width: 50px; min-height: 50px; background-color: lightgray; opacity: 0.75; border: 1px solid black; border-radius: 10px;" src="@equipamento.foto" alt="Nada" /></td>
+                }
+                else
+                {
+                    <td><p style="margin: 0 auto; text-align: center;">Nada</p></td>
+                }
+                <td>@equipamento.nome</td>
+                <td>@equipamento.modelo</td>
+                <td>@equipamento.situacao</td>                
+                <td>@equipamento.criado_em</td>
+                <td>
+                    <div class="acoes">
+                        <form asp-action="Editar" method="get">
+                            <input type="hidden" name="id" value="@equipamento.id_equipamento" />
+                            <button type="submit" class="btn btn-editar">Editar</button>
+                        </form>
+                        <form asp-action="Excluir" method="post" onsubmit="return confirm('Excluir este livro?');">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@equipamento.id_equipamento" />
+                            <button type="submit" class="btn btn-excluir">Excluir</button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+<br />
+<br />
+<a asp-action="Cadastrar" class="btnLink">Cadastrar Equipamento</a>

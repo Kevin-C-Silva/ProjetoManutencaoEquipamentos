@@ -9,5 +9,7 @@
         public string? foto { get; set; }
         public string? situacao { get; set; }
         public DateTime criado_em { get; set; }
+
+        public string? nome_usuario { get; set; }
     }
 }

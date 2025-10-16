@@ -11,54 +11,68 @@ namespace ProjetoManutencaoEquipamentos.Controllers
     public class UsuariosController : Controller
     {
         private readonly Database db = new Database();
-        public IActionResult Index(string func) // func -> função (dos usuários que serão pesquisados)
+
+        public IActionResult Index()
         {
             List<Usuarios> usuarios = new List<Usuarios>();
             using var conn = db.GetConnection();
             using (var cmd = new MySqlCommand("listarUsuarios", conn) { CommandType = CommandType.StoredProcedure })
             {
-                cmd.Parameters.AddWithValue("p_role", func);
                 var reader = cmd.ExecuteReader();
+
                 while (reader.Read())
                 {
                     usuarios.Add(new Usuarios
                     {
-                        id_tecnico = reader.GetInt32("id_tecnico"),
+                        id_usuario = reader["id_usuario"] == DBNull.Value ? null : (int?)reader.GetInt32("id_usuario"),
+                        id_tecnico = reader["id_tecnico"] == DBNull.Value ? null : (int?)reader.GetInt32("id_tecnico"),  // Tratamento para id_tecnico nulo
                         nome = reader.GetString("nome"),
                         email = reader.GetString("email"),
                         role = reader.GetString("role"),
-                        criado_em = reader.GetDateTime("criado_em"),
-                        especialidade = reader["tecnico_especialidade"] == DBNull.Value ? null : (string?)reader.GetString("tecnico_especialidade"),
-                        situacao = reader["tecnico_situacao"] == DBNull.Value ? null : (string?)reader.GetString("tecnico_situacao"),
+                        criado_em = reader.GetDateTime("criado_em"),                        
                     });
                 }
             }
             return View(usuarios);
         }
 
-        public IActionResult CriarUsuario()
+
+        public IActionResult Cadastrar()
         {
             return View();
         }
 
         [HttpPost]
-        public IActionResult CriarUsuario(Usuarios usuario)
+        public IActionResult Cadastrar(Usuarios usuario)
         {
             using var conn = db.GetConnection();
-            using var cmd = new MySqlCommand("cadastrarUsuario", conn);
+            using var cmd = new MySqlCommand("cadastrarUsuario", conn)
+            {
+                CommandType = CommandType.StoredProcedure
+            };
 
-            cmd.CommandType = CommandType.StoredProcedure;
             var senhaHash = BCrypt.Net.BCrypt.HashPassword(usuario.senha, workFactor: 12);
-            cmd.Parameters.AddWithValue("p_nome", usuario.nome);
-            cmd.Parameters.AddWithValue("p_email", usuario.email);
-            cmd.Parameters.AddWithValue("p_senha", senhaHash);
-            cmd.Parameters.AddWithValue("p_role", usuario.role);
-            cmd.Parameters.AddWithValue("cep_inicio", null);
-            cmd.Parameters.AddWithValue("cep_fim", null);
-            cmd.Parameters.AddWithValue("tecnico_especialidade", usuario.especialidade);
-            cmd.Parameters.AddWithValue("tecnico_situacao", usuario.situacao);
+
+            cmd.Parameters.AddWithValue("c_nome", usuario.nome);
+            cmd.Parameters.AddWithValue("c_espec", usuario.especialidade ?? "");
+            cmd.Parameters.AddWithValue("c_email", usuario.email);
+            cmd.Parameters.AddWithValue("c_senha", senhaHash);
+
+            // Tratar cep dividido: supondo que o usuario.cep venha no formato "12345-678"
+            string cepInicio = null, cepFim = null;
+            if (!string.IsNullOrEmpty(usuario.cep) && usuario.cep.Length == 9)
+            {
+                cepInicio = usuario.cep.Substring(0, 5);
+                cepFim = usuario.cep.Substring(6, 3);
+            }
+
+            cmd.Parameters.AddWithValue("c_cep_inicio", cepInicio ?? "");
+            cmd.Parameters.AddWithValue("c_cep_fim", cepFim ?? "");
+            cmd.Parameters.AddWithValue("c_role", usuario.role);
+
             cmd.ExecuteNonQuery();
-            return RedirectToAction("CriarUsuario");
+
+            return RedirectToAction("Index");
         }
     }
 }
